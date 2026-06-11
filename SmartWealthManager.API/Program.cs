@@ -111,10 +111,23 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowVercelFrontend",
+        policy =>
+        {
+            // Your Vercel frontend URL
+            policy.WithOrigins("https://smart-wealth-manager.vercel.app")
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();  // Important for auth cookies/headers
+        });
+});
+
 app.UseHttpsRedirection();
 
 // APPLY CORS POLICY BEFORE AUTHENTICATION MIDDLEWARES
-app.UseCors("AllowFrontend");
+app.UseCors("AllowVercelFrontend");
 
 // MIDDLEWARE EXECUTION ORDER:
 app.UseAuthentication(); 
