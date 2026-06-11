@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const API_BASE_URL = 'http://localhost:5232/api';
+const API_BASE_URL = 'https://smartwealthmanager-1.onrender.com';
 
 const DEFAULT_CATEGORIES = [
   { id: 1, name: "Salary", type: "Income", icon: "💼" },
