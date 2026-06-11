@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SmartWealthManager.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f956bcc50caaa0e513bf1a2b76788795bce5ccc9")]
 [assembly: System.Reflection.AssemblyProductAttribute("SmartWealthManager.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SmartWealthManager.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
