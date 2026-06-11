@@ -12,18 +12,22 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// CONFIGURE CORS TO PERMIT FRONTEND PORT 5173
+// ✅ CORS CONFIGURATION - Add BOTH origins (local + production)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173")
+        policy.WithOrigins(
+                "http://localhost:5173",           // Local Vite dev
+                "https://smart-wealth-manager.vercel.app"  // Production Vercel
+              )
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();  // Important for auth
     });
 });
 
-// 1. CONFIGURE SWAGGER WITH THE ABSOLUTE MOST COMPATIBLE SECURITY DEFINITIONS
+// Swagger configuration
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo 
@@ -33,8 +37,6 @@ builder.Services.AddSwaggerGen(options =>
         Description = "Secure API endpoints for managing transactions, budgets, and dashboard stats."
     });
 
-    // We configure this explicitly as 'ApiKey' but with clear instructions.
-    // This is the most reliable format for Swashbuckle on .NET.
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n" +
@@ -43,7 +45,7 @@ builder.Services.AddSwaggerGen(options =>
                       "Example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
         Name = "Authorization",
         In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey, // Forced stable API Key structure
+        Type = SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
     });
 
@@ -64,18 +66,17 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// 2. CONFIGURE EF CORE WITH SQL SERVER
-// NEW - PostgreSQL
+// Database - PostgreSQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 3. REGISTER APPLICATIVE SERVICES (Dependency Injection)
+// Dependency Injection
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<IBudgetService, BudgetService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 
-// 4. CONFIGURE SECURE JWT AUTHENTICATION MIDDLEWARE
+// JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["Secret"] ?? throw new Exception("JWT Secret not configured in appsettings!");
 var key = Encoding.UTF8.GetBytes(secretKey);
@@ -111,26 +112,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowVercelFrontend",
-        policy =>
-        {
-            // Your Vercel frontend URL
-            policy.WithOrigins("https://smart-wealth-manager.vercel.app")
-                  .AllowAnyMethod()
-                  .AllowAnyHeader()
-                  .AllowCredentials();  // Important for auth cookies/headers
-        });
-});
-
 app.UseHttpsRedirection();
 
-// APPLY CORS POLICY BEFORE AUTHENTICATION MIDDLEWARES
-app.UseCors("AllowVercelFrontend");
+// ✅ IMPORTANT: UseRouting must come BEFORE UseCors
+app.UseRouting();
 
-// MIDDLEWARE EXECUTION ORDER:
-app.UseAuthentication(); 
+// ✅ APPLY CORS - Use the policy name you defined
+app.UseCors("AllowFrontend");
+
+// ✅ Authentication & Authorization
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
